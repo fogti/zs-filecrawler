@@ -20,7 +20,7 @@ log = "0.4"
 num_cpus = "1.13"
 readfilez = "0.2"
 sha2 = "0.9"
-simplelog = "0.9"
+simplelog = "0.10"
 text_io = "0.1"
 
 [dependencies.signal-hook]
