@@ -19,6 +19,7 @@ fn main() {
             LevelFilter::Info,
             Config::default(),
             TerminalMode::Mixed,
+            ColorChoice::Auto,
         )])
         .unwrap();
     }
