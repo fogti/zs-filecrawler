@@ -170,58 +170,62 @@ impl<'a> Iterator for ShellwordSplitter<'a> {
         let mut quotec = None;
         let mut ret = StrShard::<'a>::new(self.input);
         while let Some((cpos, cx)) = it.next() {
-            match cx {
-                '\\' => {
-                    // escape works the same, no matter if inside or outside of quotes
-                    ret.push_owned(match it.next().map(|i| i.1) {
-                        Some('n') => '\n',
-                        Some('t') => '\t',
-                        Some('r') => '\r',
-                        Some(x) if quotec.is_some() && x.is_whitespace() => continue,
-                        Some(x) => x,
-                        None => return Some(Err(SyntaxError)),
-                    });
-                }
-                _ if Some(cx) == quotec => {
-                    // end of quotation
-                    quotec = None;
-                    match it.next() {
-                        Some((npos, nx)) if nx.is_whitespace() => {
-                            // simple case: the ending quote is followed by an separator
-                            // we can thus skip the whitespace and return our item
-                            self.input = &self.input[npos..];
-                            return ret.finish().map(Ok);
-                        }
-                        Some((_, nx)) if ch_is_quote(nx) => {
-                            // medium case: the ending quote if directly followed by another quote
-                            // thus, remain in quote mode
-                            quotec = Some(nx);
-                        }
-                        Some((_, nx)) => {
-                            // complex case: the ending quote is followed by more data which
-                            // belongs to the same argument
-                            ret.push_owned(nx);
-                        }
-                        None => {
-                            // simple case: the ending quote is followed by EOF
-                            self.input = "";
-                            return ret.finish().map(Ok);
-                        }
-                    }
-                }
-                _ if quotec.is_none() && ch_is_quote(cx) => {
+            if cx == '\\' {
+                // escape works the same, no matter if inside or outside of quotes
+                let x = match it.next() {
+                    Some(i) => i.1,
+                    None => return Some(Err(SyntaxError)),
+                };
+                ret.push_owned(match x {
+                    'n' => '\n',
+                    't' => '\t',
+                    'r' => '\r',
+                    _ if quotec.is_some() && x.is_whitespace() => continue,
+                    _ => x,
+                });
+                continue;
+            }
+            if quotec.is_none() {
+                if ch_is_quote(cx) {
                     // start of quotation
                     quotec = Some(cx);
                     // allow the algo to reuse simple, quoted args
                     ret.skip(1);
-                }
-                _ if quotec.is_none() && cx.is_whitespace() => {
+                    continue;
+                } else if cx.is_whitespace() {
                     // argument separator, this will never happen on the first iteration
                     self.input = &self.input[cpos..];
                     return ret.finish().map(Ok);
                 }
-                _ => ret.push(cx),
+            } else if Some(cx) == quotec {
+                // end of quotation
+                quotec = None;
+                match it.next() {
+                    Some((npos, nx)) if nx.is_whitespace() => {
+                        // simple case: the ending quote is followed by an separator
+                        // we can thus skip the whitespace and return our item
+                        self.input = &self.input[npos..];
+                        return ret.finish().map(Ok);
+                    }
+                    Some((_, nx)) if ch_is_quote(nx) => {
+                        // medium case: the ending quote if directly followed by another quote
+                        // thus, remain in quote mode
+                        quotec = Some(nx);
+                    }
+                    Some((_, nx)) => {
+                        // complex case: the ending quote is followed by more data which
+                        // belongs to the same argument
+                        ret.push_owned(nx);
+                    }
+                    None => {
+                        // simple case: the ending quote is followed by EOF
+                        self.input = "";
+                        return ret.finish().map(Ok);
+                    }
+                }
+                continue;
             }
+            ret.push(cx);
         }
         if quotec.is_some() {
             return Some(Err(SyntaxError));
@@ -265,6 +269,11 @@ mod tests {
     #[test]
     fn escaped_spaces() {
         assert_eq!(split("a b\\ c d").unwrap(), ["a", "b c", "d"]);
+    }
+
+    #[test]
+    fn start_with_qspaces() {
+        assert_eq!(split("\"  \" b c").unwrap(), ["  ", "b", "c"]);
     }
 
     #[test]
