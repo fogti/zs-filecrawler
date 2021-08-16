@@ -2,16 +2,16 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1625876282,
-        "narHash": "sha256-z/Gv+11Uzdv3HcQCY+xGi1+iuc3rmCaPzxxDSMnuRAI=",
+        "lastModified": 1629125385,
+        "narHash": "sha256-f7DZFmKccwGZXuPq1/Cjkwi9u/g2heDoIUHpvmta07k=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "068984c00e0d4e54b6684d98f6ac47c92dcb642e",
+        "rev": "fa3bf682213eb4154c85c06100f5bada7a34e630",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "nixos-20.09",
+        "ref": "master",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -33,6 +33,7 @@
       },
       "original": {
         "owner": "YZITE",
+        "ref": "main",
         "repo": "flake-utils",
         "type": "github"
       }

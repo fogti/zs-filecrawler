@@ -1,5 +1,10 @@
-use log::error;
-use std::{borrow::Cow, path::Path};
+use log::{error, warn};
+use signal_hook::consts::SIGINT;
+use std::path::Path;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 pub mod dbkeys {
     pub const HOOK: &[u8] = b"hook";
@@ -48,251 +53,61 @@ where
     Ok(())
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct SyntaxError;
+pub struct SignalDataIntern {
+    ctrlc: AtomicBool,
+    ctrlc_armed: AtomicBool,
+}
+pub type SignalData = Arc<SignalDataIntern>;
 
-pub struct ShellwordSplitter<'a> {
-    input: &'a str,
+#[must_use]
+pub struct SignalDataUnArmed<'parent> {
+    parent: &'parent SignalDataIntern,
 }
 
-impl<'a> ShellwordSplitter<'a> {
-    pub fn new(input: &'a str) -> Self {
-        Self { input }
-    }
-
-    fn skip_whitespace(&mut self) {
-        let mut it = self.input.char_indices();
-        self.input = loop {
-            break match it.next() {
-                None => "",
-                Some((pos, x)) if !x.is_whitespace() => &self.input[pos..],
-                _ => continue,
-            };
-        };
-    }
-}
-
-enum StrShard<'a> {
-    Borrowed { whole: &'a str, slen: usize },
-    Owned(String),
-}
-
-impl<'a> StrShard<'a> {
-    #[inline]
-    pub fn new(whole: &'a str) -> Self {
-        Self::Borrowed { whole, slen: 0 }
-    }
-
-    #[inline]
-    pub fn len(&self) -> usize {
-        match self {
-            Self::Borrowed { ref slen, .. } => *slen,
-            Self::Owned(ref owned) => owned.len(),
+impl SignalDataIntern {
+    pub const fn new() -> Self {
+        Self {
+            ctrlc: AtomicBool::new(false),
+            ctrlc_armed: AtomicBool::new(true),
         }
     }
-
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    fn to_mut(&mut self) -> &mut String {
-        match *self {
-            Self::Borrowed { whole, slen } => {
-                *self = Self::Owned(whole[..slen].to_string());
-                match *self {
-                    Self::Borrowed { .. } => unreachable!(),
-                    Self::Owned(ref mut x) => x,
-                }
-            }
-            Self::Owned(ref mut x) => x,
-        }
-    }
-
-    #[inline]
-    pub fn skip(&mut self, len: usize) {
-        if let Self::Borrowed { whole, slen: 0 } = self {
-            *whole = &whole[len..];
-        }
-    }
-
-    // promotes self to owned
-    #[inline]
-    pub fn push_owned(&mut self, ch: char) {
-        self.to_mut().push(ch);
-    }
-
-    pub fn push(&mut self, ch: char) {
-        match self {
-            Self::Borrowed { whole, slen } => {
-                let slen = *slen;
-                let new_len = slen + ch.len_utf8();
-                *self = if !whole[slen..].starts_with(ch) {
-                    // promote to owned
-                    let mut owned = whole[..slen].to_string();
-                    owned.push(ch);
-                    Self::Owned(owned)
-                } else {
-                    // remain borrowed
-                    Self::Borrowed {
-                        whole,
-                        slen: new_len,
-                    }
-                };
-            }
-            Self::Owned(ref mut x) => x.push(ch),
-        }
-    }
-
-    pub fn finish(self) -> Option<Cow<'a, str>> {
-        if self.is_empty() {
-            None
+    pub fn handle_ctrlc(&self) {
+        if self.is_ctrlc_armed() {
+            std::process::exit(128 + SIGINT);
         } else {
-            Some(match self {
-                Self::Borrowed { whole, slen } => Cow::Borrowed(&whole[..slen]),
-                Self::Owned(x) => Cow::Owned(x),
-            })
+            self.ctrlc.store(true, Ordering::SeqCst);
         }
+    }
+    pub fn is_ctrlc_armed(&self) -> bool {
+        self.ctrlc_armed.load(Ordering::SeqCst)
+    }
+    pub fn set_ctrlc_armed(&self, val: bool) {
+        self.ctrlc_armed.store(val, Ordering::SeqCst);
+        self.ctrlc.store(false, Ordering::SeqCst);
+    }
+    pub fn disarm_aquire(&self) -> SignalDataUnArmed<'_> {
+        self.set_ctrlc_armed(false);
+        SignalDataUnArmed { parent: self }
     }
 }
 
-#[inline]
-fn ch_is_quote(ch: char) -> bool {
-    matches!(ch, '"' | '\'')
-}
-
-impl<'a> Iterator for ShellwordSplitter<'a> {
-    type Item = Result<Cow<'a, str>, SyntaxError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.skip_whitespace();
-        let mut it = self.input.char_indices();
-        let mut quotec = None;
-        let mut ret = StrShard::<'a>::new(self.input);
-        while let Some((cpos, cx)) = it.next() {
-            if cx == '\\' {
-                // escape works the same, no matter if inside or outside of quotes
-                let x = match it.next() {
-                    Some(i) => i.1,
-                    None => return Some(Err(SyntaxError)),
-                };
-                ret.push_owned(match x {
-                    'n' => '\n',
-                    't' => '\t',
-                    'r' => '\r',
-                    _ if quotec.is_some() && x.is_whitespace() => continue,
-                    _ => x,
-                });
-                continue;
-            }
-            if quotec.is_none() {
-                if ch_is_quote(cx) {
-                    // start of quotation
-                    quotec = Some(cx);
-                    // allow the algo to reuse simple, quoted args
-                    ret.skip(1);
-                    continue;
-                } else if cx.is_whitespace() {
-                    // argument separator, this will never happen on the first iteration
-                    self.input = &self.input[cpos..];
-                    return ret.finish().map(Ok);
-                }
-            } else if Some(cx) == quotec {
-                // end of quotation
-                quotec = None;
-                match it.next() {
-                    Some((npos, nx)) if nx.is_whitespace() => {
-                        // simple case: the ending quote is followed by an separator
-                        // we can thus skip the whitespace and return our item
-                        self.input = &self.input[npos..];
-                        return ret.finish().map(Ok);
-                    }
-                    Some((_, nx)) if ch_is_quote(nx) => {
-                        // medium case: the ending quote if directly followed by another quote
-                        // thus, remain in quote mode
-                        quotec = Some(nx);
-                    }
-                    Some((_, nx)) => {
-                        // complex case: the ending quote is followed by more data which
-                        // belongs to the same argument
-                        ret.push_owned(nx);
-                    }
-                    None => {
-                        // simple case: the ending quote is followed by EOF
-                        self.input = "";
-                        return ret.finish().map(Ok);
-                    }
-                }
-                continue;
-            }
-            ret.push(cx);
-        }
-        if quotec.is_some() {
-            return Some(Err(SyntaxError));
-        }
-        self.input = "";
-        ret.finish().map(Ok)
+impl SignalDataUnArmed<'_> {
+    pub fn got_ctrlc(&self) -> bool {
+        self.parent.ctrlc.load(Ordering::SeqCst)
     }
 }
 
-#[cfg(test)]
-mod tests {
-    /// split_shellwords tests were taken from
-    /// https://docs.rs/shellwords/1.1.0/src/shellwords/lib.rs.html
-    /// License: MIT
-    fn split(x: &str) -> Result<Vec<String>, super::SyntaxError> {
-        super::ShellwordSplitter::new(x)
-            .map(|i| i.map(std::borrow::Cow::into_owned))
-            .collect()
+impl Drop for SignalDataUnArmed<'_> {
+    fn drop(&mut self) {
+        self.parent.set_ctrlc_armed(true);
     }
+}
 
-    #[test]
-    fn nothing_special() {
-        assert_eq!(split("a b c d").unwrap(), ["a", "b", "c", "d"]);
-    }
-
-    #[test]
-    fn quoted_strings() {
-        assert_eq!(split("a \"b b\" a").unwrap(), ["a", "b b", "a"]);
-    }
-
-    #[test]
-    fn escaped_double_quotes() {
-        assert_eq!(split("a \"\\\"b\\\" c\" d").unwrap(), ["a", "\"b\" c", "d"]);
-    }
-
-    #[test]
-    fn escaped_single_quotes() {
-        assert_eq!(split("a \"'b' c\" d").unwrap(), ["a", "'b' c", "d"]);
-    }
-
-    #[test]
-    fn escaped_spaces() {
-        assert_eq!(split("a b\\ c d").unwrap(), ["a", "b c", "d"]);
-    }
-
-    #[test]
-    fn start_with_qspaces() {
-        assert_eq!(split("\"  \" b c").unwrap(), ["  ", "b", "c"]);
-    }
-
-    #[test]
-    fn bad_double_quotes() {
-        split("a \"b c d e").unwrap_err();
-    }
-
-    #[test]
-    fn bad_single_quotes() {
-        split("a 'b c d e").unwrap_err();
-    }
-
-    #[test]
-    fn bad_quotes() {
-        split("one '\"\"\"").unwrap_err();
-    }
-
-    #[test]
-    fn trailing_whitespace() {
-        assert_eq!(split("a b c d ").unwrap(), ["a", "b", "c", "d"]);
-    }
+pub fn register_signal_handlers(dat: SignalData) {
+    unsafe { signal_hook::low_level::register(SIGINT, move || dat.handle_ctrlc()) }
+        .map_err(|e| {
+            warn!("Failed to register for SIGINT {:?}", e);
+            e
+        })
+        .ok();
 }

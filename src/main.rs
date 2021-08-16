@@ -1,8 +1,7 @@
 mod misc;
 mod run;
-mod signals;
 
-use crate::{misc::*, signals::*};
+use crate::misc::*;
 use indoc::indoc;
 use log::error;
 use std::{

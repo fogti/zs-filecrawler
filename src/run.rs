@@ -1,4 +1,4 @@
-use crate::{misc::*, signals::*};
+use crate::misc::*;
 use crossbeam_channel as chan;
 use digest::Digest;
 use indicatif::ProgressBar;
@@ -433,7 +433,7 @@ fn run_globpat(
     glob_pattern: &str,
 ) -> Result<(), sled::Error> {
     let paths = {
-        let mut it = crate::misc::ShellwordSplitter::new(glob_pattern);
+        let mut it = yz_string_utils::ShellwordSplitter::new(glob_pattern);
 
         let base = match it.next() {
             Some(Ok(x)) => x,
