@@ -143,7 +143,7 @@ fn worker<FilPath>(
         };
         let fdi = far.display();
         if fh2.len() > 40_960 {
-            pb.set_message(&format!("file {}: calculate hash", fdi));
+            pb.set_message(format!("file {}: calculate hash", fdi));
         }
 
         hasher.update(fh2.as_slice());
@@ -158,7 +158,7 @@ fn worker<FilPath>(
             .as_ref()
             .is_none()
         {
-            pb.set_message(&format!("hash {} file {}: run", h3, far.display()));
+            pb.set_message(format!("hash {} file {}: run", h3, far.display()));
             use std::process as prc;
 
             match prc::Command::new(hook)
@@ -174,7 +174,7 @@ fn worker<FilPath>(
                 cmdres => format!("HOOK failed with {:?}", cmdres).into_bytes(),
             }
         } else {
-            pb.set_message(&format!("hash {} file {}: skipped", h3, fdi));
+            pb.set_message(format!("hash {} file {}: skipped", h3, fdi));
             Vec::new()
         };
         if msg.is_empty() {
@@ -301,6 +301,8 @@ fn run_indexfile(
         }
     };
 
+    let fhlc = fh.lines().count().try_into().unwrap();
+
     let (iwq, workqueue) = chan::bounded(4096 * wcnt);
     let (idnq, dnq) = chan::bounded::<DoneQueueItem<&Path>>(4096 * wcnt);
     let dncnt = AtomicU32::new(0);
@@ -311,7 +313,7 @@ fn run_indexfile(
 
     crossbeam_utils::thread::scope(move |s| {
         {
-            let fpb = ProgressBar::new(fh.lines().count().try_into().unwrap());
+            let fpb = ProgressBar::new(fhlc);
             fpb.set_style(indicatif::ProgressStyle::default_bar().template(
                 "{prefix:.bold.dim} [{elapsed_precise}] {wide_bar} eta {eta} {pos}/{len}",
             ));
@@ -337,7 +339,7 @@ fn run_indexfile(
         {
             let idnq = idnq.clone();
 
-            let ipb = ProgressBar::new(fh.lines().count().try_into().unwrap());
+            let ipb = ProgressBar::new(fhlc);
             ipb.set_style(indicatif::ProgressStyle::default_bar().template(
                 "{prefix:.bold.dim} [{elapsed_precise}] {wide_bar} eta {eta} {pos}/{len}",
             ));
@@ -388,7 +390,7 @@ fn run_indexfile(
                         .unwrap();
                         continue;
                     }
-                    ips.set_message(ril);
+                    ips.set_message(ril.to_string());
                     if iwq.send(file).is_err() {
                         break;
                     }
@@ -493,7 +495,7 @@ fn run_globpat(
                     dnq,
                     move |fps, delta| {
                         cnt += delta;
-                        fps.set_message(&format!("{}", cnt));
+                        fps.set_message(format!("{}", cnt));
                         true
                     },
                 )
@@ -553,7 +555,7 @@ fn run_globpat(
                         .unwrap();
                         continue;
                     }
-                    ips.set_message(&format!("{}", file.path().display()));
+                    ips.set_message(format!("{}", file.path().display()));
                     if iwq.send(file.into_path()).is_err() {
                         break;
                     }

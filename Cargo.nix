@@ -307,20 +307,8 @@ rec {
             packageId = "libc";
           }
           {
-            name = "regex";
-            packageId = "regex";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [ "std" ];
-          }
-          {
             name = "terminal_size";
             packageId = "terminal_size";
-          }
-          {
-            name = "unicode-width";
-            packageId = "unicode-width";
-            optional = true;
           }
           {
             name = "winapi";
@@ -334,7 +322,6 @@ rec {
           "default" = [ "unicode-width" "ansi-parsing" ];
           "windows-console-colors" = [ "ansi-parsing" "winapi-util" ];
         };
-        resolvedDefaultFeatures = [ "ansi-parsing" "default" "regex" "unicode-width" ];
       };
       "cpufeatures" = rec {
         crateName = "cpufeatures";
@@ -783,16 +770,18 @@ rec {
       };
       "indicatif" = rec {
         crateName = "indicatif";
-        version = "0.15.0";
+        version = "0.16.2";
         edition = "2018";
-        sha256 = "1r4n50mclyi4c7b9c9mlma1rhchjamw71r3z8vgqcmp24mhvbakv";
+        sha256 = "06xyjs0kzqiqkjn60n1miwm2l87sa9p2lmzz0ymq18y72z37s81d";
         authors = [
           "Armin Ronacher <armin.ronacher@active-4.com>"
+          "Dirkjan Ochtman <dirkjan@ochtman.nl>"
         ];
         dependencies = [
           {
             name = "console";
             packageId = "console";
+            usesDefaultFeatures = false;
           }
           {
             name = "lazy_static";
@@ -1074,9 +1063,9 @@ rec {
       };
       "number_prefix" = rec {
         crateName = "number_prefix";
-        version = "0.3.0";
+        version = "0.4.0";
         edition = "2015";
-        sha256 = "0slm4mqmpgs6hvz22ycny9lvyvl9ivs80a1lncslp7lszz02zc0p";
+        sha256 = "1wvh13wvlajqxkb1filsfzbrnq0vrmrw298v2j3sy82z1rm282w3";
         authors = [
           "Benjamin Sago <ogham@bsago.me>"
         ];
@@ -1719,20 +1708,6 @@ rec {
         features = {
         };
       };
-      "unicode-width" = rec {
-        crateName = "unicode-width";
-        version = "0.1.8";
-        edition = "2015";
-        sha256 = "1qxizyi6xbcqyi4z79p523ywvmgsfcgfqb3zv3c8i6x1jcc5jdwk";
-        authors = [
-          "kwantam <kwantam@gmail.com>"
-          "Manish Goregaokar <manishsmail@gmail.com>"
-        ];
-        features = {
-          "rustc-dep-of-std" = [ "std" "core" "compiler_builtins" ];
-        };
-        resolvedDefaultFeatures = [ "default" ];
-      };
       "unicode-xid" = rec {
         crateName = "unicode-xid";
         version = "0.2.2";
@@ -1896,9 +1871,6 @@ rec {
           { name = "zs-filecrawler"; path = "src/main.rs"; }
         ];
         src = lib.cleanSourceWith { filter = sourceFilter;  src = ./.; };
-        authors = [
-          "Erik Zscheile <erik.zscheile@gmail.com>"
-        ];
         dependencies = [
           {
             name = "byte-unit";
