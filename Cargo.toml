@@ -21,7 +21,7 @@ readfilez = "0.2"
 sha2 = "0.9"
 simplelog = "0.10"
 text_io = "0.1"
-yz-string-utils = "0.1"
+yz-string-utils = "0.2"
 
 [dependencies.signal-hook]
 version = "0.3"
