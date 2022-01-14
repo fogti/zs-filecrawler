@@ -10,7 +10,7 @@ repository = "https://github.com/zserik/zs-filecrawler"
 byte-unit = "4.0"
 crossbeam-channel = "0.5"
 crossbeam-utils = "0.8"
-digest = "0.9"
+digest = "0.10"
 globwalk = "0.8"
 hex = "0.4"
 indicatif = "0.16"
@@ -18,8 +18,8 @@ indoc = "1.0"
 log = "0.4"
 num_cpus = "1.13"
 readfilez = "0.2"
-sha2 = "0.9"
-simplelog = "0.10"
+sha2 = "0.10"
+simplelog = "0.11"
 text_io = "0.1"
 yz-string-utils = "0.2"
 
@@ -30,9 +30,6 @@ default-features = false
 [dependencies.sled]
 version = "0.34"
 features = ["compression"]
-
-[features]
-io_uring = ["sled/io_uring"]
 
 [profile.release]
 lto = true

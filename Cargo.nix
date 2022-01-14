@@ -134,9 +134,9 @@ rec {
       };
       "block-buffer" = rec {
         crateName = "block-buffer";
-        version = "0.9.0";
+        version = "0.10.0";
         edition = "2018";
-        sha256 = "1r4pf90s7d7lj1wdjhlnqa26vvbm6pnc33z138lxpnp9srpi2lj1";
+        sha256 = "15cbh9jbcfcbbi863dlmamjka2f8l55ld915vr0b0xlf0l16mlzi";
         authors = [
           "RustCrypto Developers"
         ];
@@ -206,10 +206,10 @@ rec {
       };
       "cc" = rec {
         crateName = "cc";
-        version = "1.0.71";
+        version = "1.0.72";
         edition = "2018";
         crateBin = [];
-        sha256 = "1pgflzb5dc9pli1lfwfv5jksmz57j15iqqxqpdbnjq4lclfnihkr";
+        sha256 = "1vl50h2qh0nh0iddzj6gd1pnxnxpvwmbfxc30578c1pajmxi7a92";
         authors = [
           "Alex Crichton <alex@alexcrichton.com>"
         ];
@@ -347,9 +347,9 @@ rec {
       };
       "crc32fast" = rec {
         crateName = "crc32fast";
-        version = "1.2.1";
+        version = "1.3.0";
         edition = "2015";
-        sha256 = "06ivjlkzcxxxk7nyshc44aql4zjpmvirq46vmzrakdjax3n6y5c1";
+        sha256 = "0di8ip18srxbva7dvz8y9rqmmc43s1lc3nasl4fgr17az86jk33k";
         authors = [
           "Sam Rijs <srijs@airpost.net>"
           "Alex Crichton <alex@alexcrichton.com>"
@@ -367,12 +367,9 @@ rec {
       };
       "crossbeam-channel" = rec {
         crateName = "crossbeam-channel";
-        version = "0.5.1";
+        version = "0.5.2";
         edition = "2018";
-        sha256 = "1d1dnp61g51gnmc45cb4vpjsr5n62wz22an2y3q6avgifzhjgv86";
-        authors = [
-          "The Crossbeam Project Developers"
-        ];
+        sha256 = "1yhbpb72mrhcywq2j8nscr48glr5w33f7rmcb8ph9vmi7yyahkp5";
         dependencies = [
           {
             name = "cfg-if";
@@ -393,12 +390,9 @@ rec {
       };
       "crossbeam-epoch" = rec {
         crateName = "crossbeam-epoch";
-        version = "0.9.5";
+        version = "0.9.6";
         edition = "2018";
-        sha256 = "1zdpfd6hjf944dr5pb7h7rkiccbwksc958x4mp1y4d56384jxh2f";
-        authors = [
-          "The Crossbeam Project Developers"
-        ];
+        sha256 = "0ql7gx9yfdyyzdvrf089fddkrq4wbfzw9wvd1dfsd2cvvxq2l94p";
         dependencies = [
           {
             name = "cfg-if";
@@ -434,12 +428,9 @@ rec {
       };
       "crossbeam-utils" = rec {
         crateName = "crossbeam-utils";
-        version = "0.8.5";
+        version = "0.8.6";
         edition = "2018";
-        sha256 = "1ny481cx8a5pdknypb41jqym03dl8x26i2ldyyp3yb3zrq8zqb6q";
-        authors = [
-          "The Crossbeam Project Developers"
-        ];
+        sha256 = "0841rd6wgj7nrrhwp7kyclh4x0k9q4zc7cfd9bk4gy9lvczf1jng";
         dependencies = [
           {
             name = "cfg-if";
@@ -456,6 +447,24 @@ rec {
           "std" = [ "lazy_static" ];
         };
         resolvedDefaultFeatures = [ "default" "lazy_static" "std" ];
+      };
+      "crypto-common" = rec {
+        crateName = "crypto-common";
+        version = "0.1.1";
+        edition = "2018";
+        sha256 = "1l4q4ync13i056vjc775v0za8qh987da7yvrjj25q909cd9nngb8";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "generic-array";
+            packageId = "generic-array";
+          }
+        ];
+        features = {
+        };
+        resolvedDefaultFeatures = [ "std" ];
       };
       "delegate-attr" = rec {
         crateName = "delegate-attr";
@@ -485,23 +494,36 @@ rec {
       };
       "digest" = rec {
         crateName = "digest";
-        version = "0.9.0";
+        version = "0.10.1";
         edition = "2018";
-        sha256 = "0rmhvk33rgvd6ll71z8sng91a52rw14p0drjn1da0mqa138n1pfk";
+        sha256 = "16wpqnwlzx0lbnwccwikns7dq8fblcc6kma2l7xz8anlh5hdd5xn";
         authors = [
           "RustCrypto Developers"
         ];
         dependencies = [
+          {
+            name = "block-buffer";
+            packageId = "block-buffer";
+            optional = true;
+          }
+          {
+            name = "crypto-common";
+            packageId = "crypto-common";
+          }
           {
             name = "generic-array";
             packageId = "generic-array";
           }
         ];
         features = {
+          "core-api" = [ "block-buffer" ];
+          "default" = [ "core-api" ];
           "dev" = [ "blobby" ];
-          "std" = [ "alloc" ];
+          "mac" = [ "subtle" ];
+          "rand_core" = [ "crypto-common/rand_core" ];
+          "std" = [ "alloc" "crypto-common/std" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
+        resolvedDefaultFeatures = [ "alloc" "block-buffer" "core-api" "default" "std" ];
       };
       "encode_unicode" = rec {
         crateName = "encode_unicode";
@@ -572,9 +594,9 @@ rec {
       };
       "generic-array" = rec {
         crateName = "generic-array";
-        version = "0.14.4";
+        version = "0.14.5";
         edition = "2015";
-        sha256 = "05qqwm9v5asbil9z28wjkmpfvs1c5c99n8n9gwxis3d3r3n6c52h";
+        sha256 = "00qqhls43bzvyb7s26iw6knvsz3mckbxl3rhaahvypzhqwzd6j7x";
         libName = "generic_array";
         authors = [
           "Bartłomiej Kamiński <fizyk20@gmail.com>"
@@ -848,9 +870,9 @@ rec {
       };
       "libc" = rec {
         crateName = "libc";
-        version = "0.2.106";
+        version = "0.2.112";
         edition = "2015";
-        sha256 = "0wynaqs2ix4fqk603qhi7axw1fg9p5rhbcp9nhrs6fg0m7wm61d6";
+        sha256 = "09bik7pcck869kfr5i9hjhnck0mzpd9v0ijxbqnh8fja6rzx20qv";
         authors = [
           "The Rust Project Developers"
         ];
@@ -937,9 +959,9 @@ rec {
       };
       "memoffset" = rec {
         crateName = "memoffset";
-        version = "0.6.4";
+        version = "0.6.5";
         edition = "2015";
-        sha256 = "1yfx2v8kmkhr2d4gwk8ghihdwg73vapn3vvp0im06f0kgx8crb2r";
+        sha256 = "1kkrzll58a3ayn5zdyy9i1f1v3mx0xgl29x0chq614zazba638ss";
         authors = [
           "Gilad Naaman <gilad.naaman@gmail.com>"
         ];
@@ -1000,9 +1022,9 @@ rec {
       };
       "num_cpus" = rec {
         crateName = "num_cpus";
-        version = "1.13.0";
+        version = "1.13.1";
         edition = "2015";
-        sha256 = "1cv6yxhz2zbnwn8pn1yn8grg7zsnd523947fby41a737aqvryj85";
+        sha256 = "18apx62z4j4lajj2fi6r1i8slr9rs2d0xrbj2ls85qfyxck4brhr";
         authors = [
           "Sean McArthur <sean@seanmonstar.com>"
         ];
@@ -1015,6 +1037,7 @@ rec {
           {
             name = "libc";
             packageId = "libc";
+            target = { target, features }: (!(target."windows" or false));
           }
         ];
 
@@ -1034,9 +1057,9 @@ rec {
       };
       "once_cell" = rec {
         crateName = "once_cell";
-        version = "1.8.0";
+        version = "1.9.0";
         edition = "2018";
-        sha256 = "0mkbbxg6416z11r2yzsq91cqrkj9w1iyx5hakq15h5sbnriwnbv9";
+        sha256 = "1mfqhrsgi368x92bwnq3vi3p5nv0n1qlrn69gfflhvkfkxfm2cns";
         authors = [
           "Aleksey Kladov <aleksey.kladov@gmail.com>"
         ];
@@ -1046,16 +1069,6 @@ rec {
           "std" = [ "alloc" ];
         };
         resolvedDefaultFeatures = [ "alloc" "default" "race" "std" ];
-      };
-      "opaque-debug" = rec {
-        crateName = "opaque-debug";
-        version = "0.3.0";
-        edition = "2018";
-        sha256 = "1m8kzi4nd6shdqimn0mgb24f0hxslhnqd1whakyq06wcqd086jk2";
-        authors = [
-          "RustCrypto Developers"
-        ];
-
       };
       "parking_lot" = rec {
         crateName = "parking_lot";
@@ -1134,9 +1147,9 @@ rec {
       };
       "proc-macro2" = rec {
         crateName = "proc-macro2";
-        version = "1.0.32";
+        version = "1.0.36";
         edition = "2018";
-        sha256 = "0hqbxlvhiaybakl1gai3mgps1dxsmxricxsr2rfdrh222z0qql5s";
+        sha256 = "0adh6gvs31x6pfwmygypmzrv1jc7kjq568vsqcfaxk7vhdc2sd67";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
           "Alex Crichton <alex@alexcrichton.com>"
@@ -1154,9 +1167,9 @@ rec {
       };
       "quote" = rec {
         crateName = "quote";
-        version = "1.0.10";
+        version = "1.0.14";
         edition = "2018";
-        sha256 = "01ff7a76f871ggnby57iagw6499vci4bihcr11g6bqzjlp38rg1q";
+        sha256 = "0zf823y56wqwxkcp3rf3ik9zashpmx9700q0fmqz3np4gi281aj7";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -1267,23 +1280,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" "unicode" "unicode-age" "unicode-bool" "unicode-case" "unicode-gencat" "unicode-perl" "unicode-script" "unicode-segment" ];
       };
-      "rio" = rec {
-        crateName = "rio";
-        version = "0.9.4";
-        edition = "2018";
-        sha256 = "0nv8wrnkd41flb32lmxb412l6m1790j12c3lg305764hcmbc564y";
-        authors = [
-          "Tyler Neely <t@jujit.su>"
-        ];
-        dependencies = [
-          {
-            name = "libc";
-            packageId = "libc";
-          }
-        ];
-        features = {
-        };
-      };
       "same-file" = rec {
         crateName = "same-file";
         version = "1.0.6";
@@ -1315,17 +1311,13 @@ rec {
       };
       "sha2" = rec {
         crateName = "sha2";
-        version = "0.9.8";
+        version = "0.10.1";
         edition = "2018";
-        sha256 = "1ypm6d7536j0l868x5cai84ahpsjz53yblizm9dlrms0jx69m7xn";
+        sha256 = "1v60pzdr3pp6y2sgg1v1nwv4169rb6psk44jmnnq51y5d60vvhwr";
         authors = [
           "RustCrypto Developers"
         ];
         dependencies = [
-          {
-            name = "block-buffer";
-            packageId = "block-buffer";
-          }
           {
             name = "cfg-if";
             packageId = "cfg-if";
@@ -1338,10 +1330,6 @@ rec {
           {
             name = "digest";
             packageId = "digest";
-          }
-          {
-            name = "opaque-debug";
-            packageId = "opaque-debug";
           }
         ];
         devDependencies = [
@@ -1361,9 +1349,9 @@ rec {
       };
       "signal-hook" = rec {
         crateName = "signal-hook";
-        version = "0.3.10";
+        version = "0.3.13";
         edition = "2018";
-        sha256 = "1lgg8rwyz97pqkpg4ii7iswvs5mx8sgg2pl2ahlil9vyfcfqk64w";
+        sha256 = "0bdzvax49hm0d3s59j062cznhbkznpylzdsv93mdq1qh4zgrfz34";
         authors = [
           "Michal 'vorner' Vaner <vorner@vorner.cz>"
           "Thomas Himmelstoss <thimm@posteo.de>"
@@ -1404,9 +1392,9 @@ rec {
       };
       "simplelog" = rec {
         crateName = "simplelog";
-        version = "0.10.2";
+        version = "0.11.2";
         edition = "2018";
-        sha256 = "0ndr5qfj34crkxqsc31a9w5c2lvqn1pw70pf03pj0hhm8bk4ml45";
+        sha256 = "0700ssb3xbr5qy3n7wfrqwibdpdhmgd8nlz42q0wlwkg8mj82d61";
         authors = [
           "Drakulix <github@drakulix.de>"
         ];
@@ -1474,11 +1462,6 @@ rec {
             packageId = "parking_lot";
           }
           {
-            name = "rio";
-            packageId = "rio";
-            optional = true;
-          }
-          {
             name = "zstd";
             packageId = "zstd";
             optional = true;
@@ -1498,13 +1481,13 @@ rec {
           "pretty_backtrace" = [ "color-backtrace" ];
           "testing" = [ "event_log" "lock_free_delays" "compression" "failpoints" "backtrace" ];
         };
-        resolvedDefaultFeatures = [ "compression" "default" "io_uring" "no_metrics" "rio" "zstd" ];
+        resolvedDefaultFeatures = [ "compression" "default" "no_metrics" "zstd" ];
       };
       "smallvec" = rec {
         crateName = "smallvec";
-        version = "1.7.0";
+        version = "1.8.0";
         edition = "2018";
-        sha256 = "02gka690j8l12gl50ifg7axqnx1m6v6d1byaq0wl3fx66p3vdjhy";
+        sha256 = "10zf4fn63p2d6sx8qap3jvyarcfw563308x3431hd4c34r35gpgj";
         authors = [
           "The Servo Project Developers"
         ];
@@ -1514,9 +1497,9 @@ rec {
       };
       "syn" = rec {
         crateName = "syn";
-        version = "1.0.81";
+        version = "1.0.85";
         edition = "2018";
-        sha256 = "0rh9hvwy75j3krmi4d4x76xb86f753hxr8mlxjbabddyp0cfxbzj";
+        sha256 = "1dszd62nvccsdiakqzhm4kgc2rpfhj1sc2fd31z844w9rlysr156";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -1647,15 +1630,16 @@ rec {
       };
       "typenum" = rec {
         crateName = "typenum";
-        version = "1.14.0";
+        version = "1.15.0";
         edition = "2018";
-        sha256 = "1v2r349b2dr0pknpjk3nkrbi3mhaa3wl7zi7bdbla4zmcni0hdxn";
+        sha256 = "11yrvz1vd43gqv738yw1v75rzngjbs7iwcgzjy3cq5ywkv2imy6w";
         build = "build/main.rs";
         authors = [
           "Paho Lurie-Gregg <paho@paholg.com>"
           "Andre Bogus <bogusandre@gmail.com>"
         ];
         features = {
+          "scale_info" = [ "scale-info/derive" ];
         };
       };
       "unicode-xid" = rec {
@@ -1694,9 +1678,9 @@ rec {
       };
       "version_check" = rec {
         crateName = "version_check";
-        version = "0.9.3";
+        version = "0.9.4";
         edition = "2015";
-        sha256 = "1zmkcgj2m0pq0l4wnhrp1wl1lygf7x2h5p7pvjwc4719lnlxrv2z";
+        sha256 = "0gs8grwdlgh0xq660d7wr80x14vxbizmd8dbp29p2pdncx8lp1s9";
         authors = [
           "Sergio Benitez <sb@sergio.bz>"
         ];
@@ -1893,16 +1877,13 @@ rec {
             packageId = "yz-string-utils";
           }
         ];
-        features = {
-          "io_uring" = [ "sled/io_uring" ];
-        };
-        resolvedDefaultFeatures = [ "io_uring" ];
+
       };
       "zstd" = rec {
         crateName = "zstd";
-        version = "0.9.0+zstd.1.5.0";
+        version = "0.9.2+zstd.1.5.1";
         edition = "2018";
-        sha256 = "1k9caa048d8x9asksjaf62xkpv0m1wsmw94h29k3csybq9frlx07";
+        sha256 = "0m5aik2jy2w1g68i4isa0c3gq9a7avq9abgjfjbc6f60yqdym413";
         authors = [
           "Alexandre Bury <alexandre.bury@gmail.com>"
         ];
@@ -1915,22 +1896,24 @@ rec {
           }
         ];
         features = {
+          "arrays" = [ "zstd-safe/arrays" ];
           "bindgen" = [ "zstd-safe/bindgen" ];
           "debug" = [ "zstd-safe/debug" ];
-          "default" = [ "legacy" ];
+          "default" = [ "legacy" "arrays" ];
           "experimental" = [ "zstd-safe/experimental" ];
           "legacy" = [ "zstd-safe/legacy" ];
+          "no_asm" = [ "zstd-safe/no_asm" ];
           "pkg-config" = [ "zstd-safe/pkg-config" ];
           "thin" = [ "zstd-safe/thin" ];
           "zstdmt" = [ "zstd-safe/zstdmt" ];
         };
-        resolvedDefaultFeatures = [ "default" "legacy" ];
+        resolvedDefaultFeatures = [ "arrays" "default" "legacy" ];
       };
       "zstd-safe" = rec {
         crateName = "zstd-safe";
-        version = "4.1.1+zstd.1.5.0";
+        version = "4.1.3+zstd.1.5.1";
         edition = "2018";
-        sha256 = "0yghr94blhnfigzsynm2km3g93886z49612y7rh07c4kqpr90769";
+        sha256 = "0yfvqzzkbj871f2vaikal5rm2gf60p1mdzp3jk3w5hmkkywq37g9";
         authors = [
           "Alexandre Bury <alexandre.bury@gmail.com>"
         ];
@@ -1948,21 +1931,22 @@ rec {
         features = {
           "bindgen" = [ "zstd-sys/bindgen" ];
           "debug" = [ "zstd-sys/debug" ];
-          "default" = [ "legacy" ];
+          "default" = [ "legacy" "arrays" ];
           "experimental" = [ "zstd-sys/experimental" ];
           "legacy" = [ "zstd-sys/legacy" ];
+          "no_asm" = [ "zstd-sys/no_asm" ];
           "pkg-config" = [ "zstd-sys/pkg-config" ];
           "std" = [ "zstd-sys/std" ];
           "thin" = [ "zstd-sys/thin" ];
           "zstdmt" = [ "zstd-sys/zstdmt" ];
         };
-        resolvedDefaultFeatures = [ "legacy" "std" ];
+        resolvedDefaultFeatures = [ "arrays" "legacy" "std" ];
       };
       "zstd-sys" = rec {
         crateName = "zstd-sys";
-        version = "1.6.1+zstd.1.5.0";
+        version = "1.6.2+zstd.1.5.1";
         edition = "2018";
-        sha256 = "0cra76lginz5k659rch7axg5nyms67yffygr3k7ic7a3lb3j0lb1";
+        sha256 = "17xcr0mw8ps9hlc8m0dzj7yd52lb9r9ic9fbpxa4994yilj2zbrd";
         authors = [
           "Alexandre Bury <alexandre.bury@gmail.com>"
         ];
