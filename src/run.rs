@@ -142,10 +142,10 @@ fn worker<FilPath>(
         let h = hasher.finalize_reset();
         drop(fh2);
 
-        let h3 = hex::encode(&h);
+        let h3 = hex::encode(h);
 
         let msg = if thashes
-            .get(&h)
+            .get(h)
             .expect("unable to retrieve hash data")
             .as_ref()
             .is_none()
@@ -159,7 +159,7 @@ fn worker<FilPath>(
                 .output()
             {
                 Ok(mut x) if x.status.success() => {
-                    thashes.insert(&h, &[]).expect("unable to update hash data");
+                    thashes.insert(h, &[]).expect("unable to update hash data");
                     x.stderr.extend_from_slice(&x.stdout[..]);
                     x.stderr
                 }
@@ -285,7 +285,7 @@ fn run_indexfile(
             return Ok(());
         }
     };
-    let fh = match std::str::from_utf8(&*fh) {
+    let fh = match std::str::from_utf8(&fh) {
         Ok(x) => x,
         Err(x) => {
             error!("Unable to parse input file {}: {}", ingestf.display(), x);

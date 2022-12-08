@@ -22,29 +22,6 @@ pub fn handle_dbres<T>(x: Result<T, sled::Error>) -> Option<T> {
     .ok()
 }
 
-pub fn handle_yn(t: &sled::Tree, key: &[u8], rest: &str) {
-    handle_dbres(match rest {
-        "Y" | "YES" | "Yes" | "y" | "yes" => t.insert(key, &[]),
-        "N" | "NO" | "No" | "n" | "no" => t.remove(key),
-        _ => {
-            error!("unknown specifier");
-            return;
-        }
-    });
-}
-
-pub fn foreach_hashes_tree<F>(dbt: &sled::Db, mut f: F) -> Result<(), sled::Error>
-where
-    F: FnMut(&[u8], sled::Tree) -> Result<(), sled::Error>,
-{
-    for x in dbt.tree_names() {
-        if x.starts_with(dbtrees::HASHES_) {
-            f(&x[dbtrees::HASHES_.len()..], dbt.open_tree(&x)?)?;
-        }
-    }
-    Ok(())
-}
-
 pub struct SignalDataIntern {
     ctrlc: AtomicBool,
     ctrlc_armed: AtomicBool,

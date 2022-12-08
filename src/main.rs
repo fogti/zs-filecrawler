@@ -66,8 +66,8 @@ fn main() {
 
     use crate::run::IngestList;
     let ingl = match &cli.command {
-        Command::Run { listing_file } => IngestList::IndexFile(&listing_file),
-        Command::RunGlob { base, globs } => IngestList::GlobPattern(&base, &globs[..]),
+        Command::Run { listing_file } => IngestList::IndexFile(listing_file),
+        Command::RunGlob { base, globs } => IngestList::GlobPattern(base, &globs[..]),
     };
 
     handle_dbres(crate::run::run(&cli, &dbt, &sigdat, ingl));
