@@ -1,10 +1,10 @@
 [package]
 name = "zs-filecrawler"
 description = "crawles files, resumable"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2018"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/zserik/zs-filecrawler"
+repository = "https://github.com/zseri/zs-filecrawler"
 
 [dependencies]
 byte-unit = "4.0"
@@ -13,7 +13,7 @@ crossbeam-utils = "0.8"
 digest = "0.10"
 globwalk = "0.8"
 hex = "0.4"
-indicatif = "0.16"
+indicatif = "0.17"
 indoc = "1.0"
 log = "0.4"
 num_cpus = "1.14"

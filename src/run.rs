@@ -306,9 +306,13 @@ fn run_indexfile(
     crossbeam_utils::thread::scope(move |s| {
         {
             let fpb = ProgressBar::new(fhlc);
-            fpb.set_style(indicatif::ProgressStyle::default_bar().template(
-                "{prefix:.bold.dim} [{elapsed_precise}] {wide_bar} eta {eta} {pos}/{len}",
-            ));
+            fpb.set_style(
+                indicatif::ProgressStyle::default_bar()
+                    .template(
+                        "{prefix:.bold.dim} [{elapsed_precise}] {wide_bar} eta {eta} {pos}/{len}",
+                    )
+                    .unwrap(),
+            );
             fpb.set_prefix(" done ");
             let fpb = mpbs.add(fpb);
 
@@ -322,7 +326,7 @@ fn run_indexfile(
                     dnq,
                     move |fpb, delta| {
                         fpb.inc(delta);
-                        fpb.position() != fpb.length()
+                        Some(fpb.position()) != fpb.length()
                     },
                 )
             });
@@ -332,16 +336,21 @@ fn run_indexfile(
             let idnq = idnq.clone();
 
             let ipb = ProgressBar::new(fhlc);
-            ipb.set_style(indicatif::ProgressStyle::default_bar().template(
-                "{prefix:.bold.dim} [{elapsed_precise}] {wide_bar} eta {eta} {pos}/{len}",
-            ));
+            ipb.set_style(
+                indicatif::ProgressStyle::default_bar()
+                    .template(
+                        "{prefix:.bold.dim} [{elapsed_precise}] {wide_bar} eta {eta} {pos}/{len}",
+                    )
+                    .unwrap(),
+            );
             ipb.set_prefix("ingest");
             let ipb = mpbs.add(ipb);
             let ips = ProgressBar::new_spinner();
             ips.set_style(
                 indicatif::ProgressStyle::default_spinner()
                     .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
-                    .template("{prefix:.bold.dim} {spinner} {wide_msg}"),
+                    .template("{prefix:.bold.dim} {spinner} {wide_msg}")
+                    .unwrap(),
             );
             ips.set_prefix("ingest");
             let ips = mpbs.add(ips);
@@ -394,7 +403,8 @@ fn run_indexfile(
 
         let pbstyle = indicatif::ProgressStyle::default_spinner()
             .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
-            .template("{spinner} {wide_msg}");
+            .template("{spinner} {wide_msg}")
+            .unwrap();
 
         for _ in 0..wcnt {
             let pb = indicatif::ProgressBar::new(0);
@@ -406,7 +416,6 @@ fn run_indexfile(
         }
         drop(workqueue);
         drop(idnq);
-        mpbs.join().unwrap();
     })
     .map_err(|_| {
         sled::Error::Io(std::io::Error::new(
@@ -451,7 +460,8 @@ fn run_globpat(
             let fps = ProgressBar::new_spinner();
             fps.set_style(
                 indicatif::ProgressStyle::default_spinner()
-                    .template("{prefix:.bold.dim} [{elapsed_precise}] {spinner} {wide_msg}"),
+                    .template("{prefix:.bold.dim} [{elapsed_precise}] {spinner} {wide_msg}")
+                    .unwrap(),
             );
             fps.set_prefix(" done ");
             let fps = mpbs.add(fps);
@@ -481,7 +491,8 @@ fn run_globpat(
             ips.set_style(
                 indicatif::ProgressStyle::default_spinner()
                     .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
-                    .template("{prefix:.bold.dim} [{elapsed_precise}] {spinner} {wide_msg}"),
+                    .template("{prefix:.bold.dim} [{elapsed_precise}] {spinner} {wide_msg}")
+                    .unwrap(),
             );
             ips.set_prefix("ingest");
             let ips = mpbs.add(ips);
@@ -538,7 +549,8 @@ fn run_globpat(
 
         let pbstyle = indicatif::ProgressStyle::default_spinner()
             .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
-            .template("{spinner} {wide_msg}");
+            .template("{spinner} {wide_msg}")
+            .unwrap();
 
         for _ in 0..wcnt {
             let pb = indicatif::ProgressBar::new(0);
@@ -550,7 +562,6 @@ fn run_globpat(
         }
         drop(workqueue);
         drop(idnq);
-        mpbs.join().unwrap();
     })
     .map_err(|_| {
         sled::Error::Io(std::io::Error::new(
