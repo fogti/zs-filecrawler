@@ -7,21 +7,27 @@ use std::{path::PathBuf, sync::Arc};
 #[derive(clap::Parser)]
 pub struct Cli {
     /// database path
+    #[arg(short)]
     db: PathBuf,
 
     /// path to hook (gets invoked for each file with the file as first argument)
+    #[arg(long)]
     hook: PathBuf,
 
     /// optional path to logfile
+    #[arg(short)]
     logfile: Option<PathBuf>,
 
     /// set maximum processed filesize
+    #[arg(long)]
     max_filesize: Option<String>,
 
     /// enable multiprocessing
+    #[arg(short = 'M', long)]
     use_mp: bool,
 
     /// suppress log messages
+    #[arg(short, long)]
     suppress_logmsgs: bool,
 
     #[command(subcommand)]
