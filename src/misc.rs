@@ -6,14 +6,6 @@ use std::sync::{
     Arc,
 };
 
-pub mod dbkeys {
-    pub const HOOK: &[u8] = b"hook";
-    pub const LOGFILE: &[u8] = b"logfile";
-    pub const MAX_FSIZ: &[u8] = b"max-filesize";
-    pub const SUPPRESS_LOGMSGS: &[u8] = b"suppress-logmsgs";
-    pub const USE_MP: &[u8] = b"use-mp";
-}
-
 pub mod dbtrees {
     pub const HASHES_: &[u8] = b"hashes:";
 }

@@ -15,60 +15,51 @@ struct DoneQueueItem<F> {
 
 pub enum IngestList<'a> {
     IndexFile(&'a Path),
-    GlobPattern(&'a str),
+    GlobPattern(&'a Path, &'a [String]),
 }
 
-pub fn run(db: &sled::Db, sigdat: &SignalData, ingestl: IngestList<'_>) -> Result<(), sled::Error> {
-    let max_filesize: Option<u64> = db.get(dbkeys::MAX_FSIZ)?.and_then(|iv| {
-        let mut buf = [0u8; 8];
-        if iv.len() != buf.len() {
-            return None;
-        }
-        buf.copy_from_slice(&iv[..]);
-        Some(u64::from_le_bytes(buf))
-    });
-
-    let wcnt: usize = 1 + if db.get(dbkeys::USE_MP)?.is_some() {
-        num_cpus::get()
-    } else {
-        0
-    };
-
-    let hook = match db.get(dbkeys::HOOK)? {
-        Some(h) => {
-            let p = match std::str::from_utf8(&*h) {
-                Ok(x) => Path::new(x),
-                Err(x) => {
-                    error!("Invalid hook in DB (non-utf8): error = {}", x);
+pub fn run(
+    cli: &super::Cli,
+    db: &sled::Db,
+    sigdat: &SignalData,
+    ingestl: IngestList<'_>,
+) -> Result<(), sled::Error> {
+    let max_filesize: Option<u64> = match &cli.max_filesize {
+        None => None,
+        Some(iv) => {
+            let bs = match byte_unit::Byte::from_str(iv) {
+                Ok(x) => x.get_bytes(),
+                Err(e) => {
+                    error!("Invalid size specification {:?}: {:?}", iv, e);
                     return Ok(());
                 }
             };
-            if !p.is_file() {
-                error!("Hook not found: {}", p.display());
+            if bs >= (isize::MAX as u128) {
+                error!("Given maximal filesize is too large");
                 return Ok(());
             }
-            p.to_path_buf()
-        }
-        None => {
-            error!("No hook set!");
-            return Ok(());
+            Some(bs as u64)
         }
     };
-    let hook = hook.as_path();
 
-    let dont_suppress = db.get(dbkeys::SUPPRESS_LOGMSGS)?.is_none();
-    let logfile = match db.get(dbkeys::LOGFILE)? {
+    let wcnt: usize = 1 + if cli.use_mp { num_cpus::get() } else { 0 };
+
+    let hook = &cli.hook;
+    if !hook.is_file() {
+        error!("Hook not found: {}", hook.display());
+        return Ok(());
+    }
+
+    let dont_suppress = !cli.suppress_logmsgs;
+    let logfile = match cli.logfile.as_ref().map(|x| {
+        std::fs::OpenOptions::new()
+            .read(false)
+            .append(true)
+            .create(true)
+            .open(x)
+    }) {
         None => None,
-        Some(x) => {
-            let x = std::str::from_utf8(&x[..]).expect("non utf-8 log file name");
-            Some(
-                std::fs::OpenOptions::new()
-                    .read(false)
-                    .append(true)
-                    .create(true)
-                    .open(x)?,
-            )
-        }
+        Some(x) => Some(x?),
     };
 
     let thashes = db.open_tree(
@@ -90,7 +81,7 @@ pub fn run(db: &sled::Db, sigdat: &SignalData, ingestl: IngestList<'_>) -> Resul
             logfile,
             ingestf,
         ),
-        IngestList::GlobPattern(glob_pattern) => run_globpat(
+        IngestList::GlobPattern(base, glob) => run_globpat(
             &thashes,
             sigdat,
             max_filesize,
@@ -98,7 +89,8 @@ pub fn run(db: &sled::Db, sigdat: &SignalData, ingestl: IngestList<'_>) -> Resul
             hook,
             dont_suppress,
             logfile,
-            glob_pattern,
+            base,
+            glob,
         ),
     }
 }
@@ -432,37 +424,17 @@ fn run_globpat(
     hook: &Path,
     dont_suppress: bool,
     logfile: Option<std::fs::File>,
-    glob_pattern: &str,
+    base: &Path,
+    patterns: &[String],
 ) -> Result<(), sled::Error> {
-    let paths = {
-        let mut it = yz_string_utils::ShellwordSplitter::new(glob_pattern);
-
-        let base = match it.next() {
-            Some(Ok(x)) => x,
-            _ => {
-                error!("Failed to parse 'run-glob' arguments, invalid invocation (base path)");
-                return Ok(());
-            }
-        };
-        let base = std::path::Path::new(&*base);
-
-        let patterns = match it.collect::<Result<Vec<_>, _>>() {
-            Ok(x) => x,
-            Err(_) => {
-                error!("Failed to parse 'run-glob' arguments, invalid invocation (pattern list)");
-                return Ok(());
-            }
-        };
-
-        match globwalk::GlobWalkerBuilder::from_patterns(base, &patterns[..])
-            .file_type(globwalk::FileType::FILE)
-            .build()
-        {
-            Ok(x) => x,
-            Err(e) => {
-                error!("Failed to prepare the GlobWalker: {}", e);
-                return Ok(());
-            }
+    let paths = match globwalk::GlobWalkerBuilder::from_patterns(base, patterns)
+        .file_type(globwalk::FileType::FILE)
+        .build()
+    {
+        Ok(x) => x,
+        Err(e) => {
+            error!("Failed to prepare the GlobWalker: {}", e);
+            return Ok(());
         }
     };
 
