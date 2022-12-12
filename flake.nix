@@ -6,6 +6,7 @@
   };
   outputs = { nixpkgs, yz-flake-utils, ... }:
     yz-flake-utils.lib.mkFlakeFromProg {
+      contentAddressedByDefault = false;
       prevpkgs = nixpkgs;
       progname = "zs-filecrawler";
       drvBuilder = final: prev:
