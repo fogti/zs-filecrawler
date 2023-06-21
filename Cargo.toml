@@ -16,13 +16,13 @@ hex = "0.4"
 indicatif = "0.17"
 indoc = "1.0"
 log = "0.4"
-num_cpus = "1.14"
+num_cpus = "1.15"
 readfilez = "0.3"
 sha2 = "0.10"
 simplelog = "0.12"
 
 [dependencies.clap]
-version = "4.0"
+version = "4.3"
 features = ["derive"]
 
 [dependencies.signal-hook]
